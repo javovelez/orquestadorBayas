@@ -1,0 +1,10 @@
+services:
+  orquestador: 
+    build: .
+    container_name: orquestador
+    image: orquestador
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+

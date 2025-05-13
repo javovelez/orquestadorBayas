@@ -1,0 +1,64 @@
+version: '3.8'
+services: 
+  redis: 
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  orquestador:
+    build: ./orquestador
+    ports: 
+      - "8000:8000"
+    volumes:
+      - shared_volume:/shared
+      - ./orquestador:/app
+    depends_on:
+      - redis
+      - detector_bayas
+      # - detector_qr
+      # - tracker_bayas
+      # - nubes_bayas
+
+  detector_bayas:
+    build: ./workers/detectorBayas
+    volumes:
+      - shared_volume:/shared
+      - ./workers/detectorBayas:/app
+    user: root
+    runtime: nvidia
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
+      - NVIDIA_DISABLE_REQUIRE=1
+      - LD_LIBRARY_PATH=/usr/local/cuda-9.2/lib64:${LD_LIBRARY_PATH}
+    ports:
+      - "8003:8000"
+
+  # detector_qr: 
+  #   build: ./workers/qrDetectorBayas
+  #   volumes: 
+  #     - shared_volume:/shared
+  #   environment:
+  #     - CELERY_BROKER_URL: redis://redis:6379/0
+
+  # tracker_bayas: 
+  #   build: ./workers/trackerBayas
+  #   volumes:
+  #     - shared_volume:/shared
+  #   environment:
+  #    - CELERY_BROKER_URL: redis://redis:6379/0
+
+  # nubes_bayas: 
+  #   build: ./workers/nubesBayas
+  #   volumes:
+  #     - shared_volume:/shared
+  #   environment:
+  #    - CELERY_BROKER_URL: redis://redis:6379/0
+
+volumes:
+  redis_data: 
+  shared_volume: 
