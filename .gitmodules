@@ -1,0 +1,3 @@
+[submodule "workers/detectorBayas"]
+	path = workers/detectorBayas
+	url = https://github.com/franveggiani/detectorBayas.git
