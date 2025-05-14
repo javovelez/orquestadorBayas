@@ -13,19 +13,19 @@ services:
     ports: 
       - "8000:8000"
     volumes:
-      - shared_volume:/shared
+      - ./shared_vol:/shared
       - ./orquestador:/app
     depends_on:
       - redis
       - detector_bayas
-      # - detector_qr
+      - detector_qr
       # - tracker_bayas
       # - nubes_bayas
 
   detector_bayas:
     build: ./workers/detectorBayas
     volumes:
-      - shared_volume:/shared
+      - ./shared_vol:/shared
       - ./workers/detectorBayas:/app
     user: root
     runtime: nvidia
@@ -38,12 +38,13 @@ services:
     ports:
       - "8003:8000"
 
-  # detector_qr: 
-  #   build: ./workers/qrDetectorBayas
-  #   volumes: 
-  #     - shared_volume:/shared
-  #   environment:
-  #     - CELERY_BROKER_URL: redis://redis:6379/0
+  detector_qr: 
+    build: ./workers/qrDetectorBayas
+    volumes: 
+      - ./workers/qrDetectorBayas:/app
+      - ./shared_vol:/shared
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
 
   # tracker_bayas: 
   #   build: ./workers/trackerBayas
