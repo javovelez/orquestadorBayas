@@ -8,6 +8,15 @@ services:
     volumes:
       - redis_data:/data
 
+  flower:
+    image: mher/flower
+    container_name: flower
+    command: celery --broker=redis://redis:6379/0 flower --port=5555
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+
   orquestador:
     build: ./orquestador
     ports: 
@@ -17,26 +26,24 @@ services:
       - ./orquestador:/app
     depends_on:
       - redis
-      - detector_bayas
+      # - detector_bayas
       - detector_qr
-      # - tracker_bayas
+      - tracker
       # - nubes_bayas
 
-  detector_bayas:
-    build: ./workers/detectorBayas
-    volumes:
-      - ./shared_vol:/shared
-      - ./workers/detectorBayas:/app
-    user: root
-    runtime: nvidia
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
-      - NVIDIA_DISABLE_REQUIRE=1
-      - LD_LIBRARY_PATH=/usr/local/cuda-9.2/lib64:${LD_LIBRARY_PATH}
-    ports:
-      - "8003:8000"
+  # detector_bayas:
+  #   build: ./workers/detectorBayas
+  #   volumes:
+  #     - ./shared_vol:/shared
+  #     - ./workers/detectorBayas:/app
+  #   user: root
+  #   runtime: nvidia
+  #   environment:
+  #     - CELERY_BROKER_URL=redis://redis:6379/0
+  #     - NVIDIA_VISIBLE_DEVICES=all
+  #     - NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
+  #     - NVIDIA_DISABLE_REQUIRE=1
+  #     - LD_LIBRARY_PATH=/usr/local/cuda-9.2/lib64:${LD_LIBRARY_PATH}
 
   detector_qr: 
     build: ./workers/qrDetectorBayas
@@ -46,6 +53,13 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
 
+  tracker:
+    build: ./workers/trackerBayas
+    volumes:
+      - ./workers/trackerBayas:/app
+      - ./shared_vol:/shared
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
   # tracker_bayas: 
   #   build: ./workers/trackerBayas
   #   volumes:
