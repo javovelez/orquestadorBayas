@@ -3,6 +3,7 @@ from celery import Celery, chain, group, chord
 from celery.result import AsyncResult
 from typing import List, Dict, Any
 import os
+import requests
 
 app = FastAPI()
 
@@ -18,6 +19,7 @@ async def upload_videos(videos: List[UploadFile] = File(...)):
     Endpoint to upload videos.
     """
     uploaded_videos = []
+    tasks_ids = []
     for video in videos:
         
         # Crear carpeta por cada video en SHARED_PATH
@@ -40,20 +42,21 @@ async def upload_videos(videos: List[UploadFile] = File(...)):
         qr_detector_tasks = pipeline_qr_detector(celery_app, video_folder, file_path, video_name)
         tracker_tasks = pipeline_tracker(celery_app, video_folder=video_folder, radius=10, video_name=video_name, draw_circles=True, draw_tracking=True)
         
-        pipeline = chain(
-            # detector_tasks,
-            qr_detector_tasks,
-            tracker_tasks
-        )
-        result = pipeline.apply_async()
+        print(qr_detector_tasks, tracker_tasks)
         
-        tasks_ids = get_task_ids_from_chain(result)
+        pipeline = qr_detector_tasks | tracker_tasks
         
-        tasks_ids = {
-            'video_folder': video_folder,
+        result = pipeline.apply_async() # Se ejecutan las tareas
+        
+        task_id = get_task_ids_from_chain(result)
+        
+        task_id_dict = {
             'video_name': video_name,
-            'tasks_ids': tasks_ids
+            'task_id': task_id,
+            'video_folder': video_folder,
         }
+        
+        tasks_ids.append(task_id_dict)
         
     return tasks_ids
 
@@ -101,7 +104,8 @@ def pipeline_qr_detector(celery_app, video_folder, file_path, video_name):
             'modo': 'hibrido',
             'log_file_name': log_path,
         }, 
-        queue='qr_detector_queue'
+        queue='qr_detector_queue',
+        task_id=f'{video_name}_frame_ranges_task'
     )
     
     # Genera subtareas paralelas para procesar rangos de frames, combina resultados, y genera datos
@@ -112,7 +116,8 @@ def pipeline_qr_detector(celery_app, video_folder, file_path, video_name):
             'log_path': os.path.join(video_folder, 'qr_detector_log.txt'),
             'output_folder': video_folder
         }, 
-        queue='qr_detector_queue'
+        queue='qr_detector_queue',
+        task_id=f'{video_name}_generar_datos_qr_task'
     )
     
     return chain(
@@ -135,7 +140,7 @@ def pipeline_detector_bayas(celery_app, video_folder, video_name):
 def pipeline_tracker(celery_app, video_folder, radius, video_name, draw_circles, draw_tracking):
     
     return celery_app.signature(
-        'tasks.tracker_task',
+        'tasks.tracker_http_task',
         kwargs = {
             'input_folder': video_folder,
             'output_folder': video_folder,
@@ -144,5 +149,7 @@ def pipeline_tracker(celery_app, video_folder, radius, video_name, draw_circles,
             'draw_circles': draw_circles,
             'draw_tracking': draw_tracking
         },
-        queue='tracker_queue'
+        queue='peticiones_queue',
+        task_id=f'{video_name}_tracker_task'
     )
+    

@@ -28,7 +28,8 @@ services:
       - redis
       # - detector_bayas
       - detector_qr
-      - tracker
+      - tracker-service
+      - peticiones-service
       # - nubes_bayas
 
   # detector_bayas:
@@ -53,13 +54,27 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
 
-  tracker:
+  tracker-service:
     build: ./workers/trackerBayas
     volumes:
       - ./workers/trackerBayas:/app
       - ./shared_vol:/shared
+    ports:
+      - "8002:8000"
+    expose:
+      - "8000"
+
+  peticiones-service:
+    build: ./workers/peticionesHTTP
+    volumes:
+      - ./workers/peticionesHTTP:/app
+      - ./shared_vol:/shared
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
+      - TRACKER_SERVICE_URL=http://tracker-service:8000
+    depends_on:
+      - tracker-service
+
   # tracker_bayas: 
   #   build: ./workers/trackerBayas
   #   volumes:
