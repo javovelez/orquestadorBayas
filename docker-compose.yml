@@ -32,19 +32,19 @@ services:
       - peticiones-service
       # - nubes_bayas
 
-  detector_bayas:
-    build: ./workers/detectorBayas
-    volumes:
-      - ./shared_vol:/shared
-      - ./workers/detectorBayas:/app
-    user: root
-    runtime: nvidia
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
-      - NVIDIA_DISABLE_REQUIRE=1
-      - LD_LIBRARY_PATH=/usr/local/cuda-9.2/lib64:${LD_LIBRARY_PATH}
+  # detector_bayas:
+  #   build: ./workers/detectorBayas
+  #   volumes:
+  #     - ./shared_vol:/shared
+  #     - ./workers/detectorBayas:/app
+  #   user: root
+  #   runtime: nvidia
+  #   environment:
+  #     - CELERY_BROKER_URL=redis://redis:6379/0
+  #     - NVIDIA_VISIBLE_DEVICES=all
+  #     - NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
+  #     - NVIDIA_DISABLE_REQUIRE=1
+  #     - LD_LIBRARY_PATH=/usr/local/cuda-9.2/lib64:${LD_LIBRARY_PATH}
 
   detector_qr: 
     build: ./workers/qrDetectorBayas
@@ -63,6 +63,16 @@ services:
       - "8002:8000"
     expose:
       - "8000"
+
+  nubes-service: 
+    build: ./workers/nubesBayas
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./workers/nubesBayas:/app
+      - ./shared_vol:/shared
+    expose:
+      - "8001"
 
   peticiones-service:
     build: ./workers/peticionesHTTP

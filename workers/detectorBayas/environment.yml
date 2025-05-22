@@ -1,0 +1,16 @@
+name: CircleNet
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.6
+  - mkl-service
+  - numpy
+  - matplotlib=3.3.4
+  - cython=0.29.24
+  - numba=0.53.1
+  - llvmlite=0.36.0
+  - certifi=2021.5.30
+  - opencv
+  - pillow=6.2.0
+  - pip

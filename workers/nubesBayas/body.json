@@ -1,0 +1,15 @@
+{
+    "input_path": "./input",
+    "video_name": "VID_20230322_173621",
+    "baya_threshold": 105,
+    "qr_threshold": 120,
+    "output_path": "./output",
+    "calib_file": "MotorolaG200_Javo_Vertical.yaml",
+    "qr_dist": 2.1,
+    "dists_list": [10, 20, 5],
+    "min_mer": 10,
+    "min_dist": 0,
+    "min_path": "",
+    "input_csv_name": "Reproyecciones.csv"
+  }
+  

@@ -1,0 +1,10 @@
+pyzbar
+click
+pandas
+matplotlib
+numpy
+opencv-python
+fastapi
+uvicorn[standard]
+celery
+redis
