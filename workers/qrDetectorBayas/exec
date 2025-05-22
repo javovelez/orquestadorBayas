@@ -1,0 +1,2 @@
+pipenv shell
+python main.py --video-path ../input/video.mp4 --salida-csv datos.csv --log-path log.txt --num-processes 4 --generar-video --output-video output_video.mp4 --modo hibrido --output-path ../output/

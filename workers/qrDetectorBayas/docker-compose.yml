@@ -1,0 +1,10 @@
+services:
+  qrdetector:
+    image: qrdetector
+    build: .
+    container_name: QRDetector
+    volumes:
+      - ./:/app
+
+volumes:
+  shared_vol:

@@ -8,6 +8,15 @@ services:
     volumes:
       - redis_data:/data
 
+  flower:
+    image: mher/flower
+    container_name: flower
+    command: celery --broker=redis://redis:6379/0 flower --port=5555
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+
   orquestador:
     build: ./orquestador
     ports: 
@@ -17,26 +26,25 @@ services:
       - ./orquestador:/app
     depends_on:
       - redis
-      - detector_bayas
+      # - detector_bayas
       - detector_qr
-      # - tracker_bayas
+      - tracker-service
+      - peticiones-service
       # - nubes_bayas
 
-  detector_bayas:
-    build: ./workers/detectorBayas
-    volumes:
-      - ./shared_vol:/shared
-      - ./workers/detectorBayas:/app
-    user: root
-    runtime: nvidia
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
-      - NVIDIA_DISABLE_REQUIRE=1
-      - LD_LIBRARY_PATH=/usr/local/cuda-9.2/lib64:${LD_LIBRARY_PATH}
-    ports:
-      - "8003:8000"
+  # detector_bayas:
+  #   build: ./workers/detectorBayas
+  #   volumes:
+  #     - ./shared_vol:/shared
+  #     - ./workers/detectorBayas:/app
+  #   user: root
+  #   runtime: nvidia
+  #   environment:
+  #     - CELERY_BROKER_URL=redis://redis:6379/0
+  #     - NVIDIA_VISIBLE_DEVICES=all
+  #     - NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
+  #     - NVIDIA_DISABLE_REQUIRE=1
+  #     - LD_LIBRARY_PATH=/usr/local/cuda-9.2/lib64:${LD_LIBRARY_PATH}
 
   detector_qr: 
     build: ./workers/qrDetectorBayas
@@ -46,12 +54,36 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
 
-  # tracker_bayas: 
-  #   build: ./workers/trackerBayas
-  #   volumes:
-  #     - shared_volume:/shared
-  #   environment:
-  #    - CELERY_BROKER_URL: redis://redis:6379/0
+  tracker-service:
+    build: ./workers/trackerBayas
+    volumes:
+      - ./workers/trackerBayas:/app
+      - ./shared_vol:/shared
+    ports:
+      - "8002:8000"
+    expose:
+      - "8000"
+
+  nubes-service: 
+    build: ./workers/nubesBayas
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./workers/nubesBayas:/app
+      - ./shared_vol:/shared
+    expose:
+      - "8001"
+
+  peticiones-service:
+    build: ./workers/peticionesHTTP
+    volumes:
+      - ./workers/peticionesHTTP:/app
+      - ./shared_vol:/shared
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - TRACKER_SERVICE_URL=http://tracker-service:8000
+    depends_on:
+      - tracker-service
 
   # nubes_bayas: 
   #   build: ./workers/nubesBayas

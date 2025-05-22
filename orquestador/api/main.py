@@ -1,7 +1,9 @@
 from fastapi import FastAPI, File, UploadFile
-from celery import Celery, chain, group
-from typing import List
+from celery import Celery, chain, group, chord
+from celery.result import AsyncResult
+from typing import List, Dict, Any
 import os
+import requests
 
 app = FastAPI()
 
@@ -16,107 +18,192 @@ async def upload_videos(videos: List[UploadFile] = File(...)):
     """
     Endpoint to upload videos.
     """
+    
+    baya_thresh = 0.7*150, 
+    qr_thresh = 120, 
+    cant_nubes = 1, 
+    calib_file = 'MotorolaG200_Javo_Vertical.yaml', 
+    qr_dist = 2.1, 
+    dists_list = [10, 40, 5], 
+    reproy_csv_name = 'reproyecciones.csv',
+    num_points = 100
+    
     uploaded_videos = []
+    tasks_ids = []
     for video in videos:
         
         # Crear carpeta por cada video en SHARED_PATH
-        video_name = str(video.filename)
-        video_folder = os.path.join(SHARED_PATH, video_name.replace('.mp4', ''))
+        video_name = str(video.filename).replace('.mp4', '')
+        video_folder = os.path.join(SHARED_PATH, video_name)
         os.makedirs(video_folder, exist_ok=True)
         
         # Copiar el video a cada carpeta
-        file_path = os.path.join(video_folder, video_name)
+        video_path = os.path.join(video_folder, video_name + '.mp4')
         
-        with open(file_path, 'wb') as f: 
+        with open(video_path, 'wb') as f: 
             f.write(await video.read())
 
         uploaded_videos.append(video_folder)
         
-        '''
-        EJECUTAR TAREAS PARA DETECTORBAYAS
+        # Comenzar ejecución de tareas
+        # Asignar ids a tareas videoname+num_tarea (dentro de las funciones)
         
-        Args
+        detector_tasks = pipeline_detector_bayas(celery_app, video_folder, video_name)
+        qr_detector_tasks = pipeline_qr_detector(celery_app, video_folder, video_path, video_name)
+        tracker_tasks = pipeline_tracker(celery_app, video_folder=video_folder, radius=10, video_name=video_name, draw_circles=True, draw_tracking=True)
+        nubes_tasks = pipeline_nubes(celery_app, 
+                                     video_folder, 
+                                     video_folder, 
+                                     video_name,
+                                     baya_thresh, 
+                                     qr_thresh, 
+                                     cant_nubes, 
+                                     calib_file, 
+                                     qr_dist, 
+                                     dists_list, 
+                                     reproy_csv_name, 
+                                     num_points)
         
-        - input_folder
-        - output_folder
-        - video_name
+        print(qr_detector_tasks, tracker_tasks)
         
-        '''
-        # detector_bayas_task = celery_app.send_task(
-        #     'tasks.detector',
-        #     kwargs = {
-        #         'input_folder': video_folder,
-        #         'output_folder': video_folder,
-        #         'video_name': video_name
-        #     },
-        #     queue='detector_queue'
-        # )
+        pipeline = qr_detector_tasks | tracker_tasks | nubes_tasks
         
-        # 
-        '''
-        EJECUTAR TAREAS PARA QR_DETECTOR
+        result = pipeline.apply_async() # Se ejecutan las tareas
         
-        Args
+        task_id = get_task_ids_from_chain(result)
         
-        - input_folder
-        - output_folder
-        - video_name
-        - modo:str='hibrido'
-        - log_file_name:str='qr_detector_log'
-        - num_processes:int=None
-        - prefijo:str=None
-        - qr_det_csv:str='qr_detections.csv'
-        - generar_video: bool=True
-        - factor_lentitud:float=0.5
+        task_id_dict = {
+            'video_name': video_name,
+            'task_id': task_id,
+            'video_folder': video_folder,
+        }
         
-        '''
+        tasks_ids.append(task_id_dict)
         
-        log_path = os.path.join(video_folder, 'qr_detector_log.txt')
-        
-        # 1. Ejecutar frame_ranges y esperar el resultado
-        frame_ranges_result = celery_app.send_task(
-            'tasks.tasks.qr_detector',
-            kwargs={
-                'input_folder': video_folder,
-                'output_folder': video_folder,
-                'video_name': video_name,
-                'modo': 'hibrido',
-                'log_file_name': 'qr_detector_log',
-            },
-            queue='qr_detector_queue'
-        )
+    return tasks_ids
 
-        frame_ranges = frame_ranges_result.get()  # Esperamos los rangos
-
-        # 2. Crear lista de subtareas usando send_task para cada rango
-        subtasks = [
-            celery_app.signature(
-                'tasks.tasks.procesar_frame_range_task',
-                kwargs={
-                    'video_path': file_path,
-                    'log_path': log_path,
-                    'start_frame': start,
-                    'end_frame': end,
-                    'output': video_folder
-                },
-                queue='qr_detector_queue'
-            )
-            for start, end in frame_ranges
-        ]
-
-        # 3. Crear el group y chain con send_task
-        workflow = group(subtasks) | celery_app.signature(
-            'tasks.tasks.combinar_resultados',
-            queue='qr_detector_queue'
-        )
-
-        # 4. Ejecutar la cadena
-        result = workflow.apply_async()
-
-        # 5. Obtener resultado final (opcional: bloquear hasta completado)
-        datos = result.get()
-                
+def get_task_ids_from_chain(chain_result: AsyncResult) -> Dict[str, str]:
+    """
+    Recursively extracts task IDs from a Celery chain result.
     
-    return {"videos": uploaded_videos, "frame_ranges": frame_ranges, "datos": datos}
+    Args:
+        chain_result: The AsyncResult of the chain
+        
+    Returns:
+        Dict containing all task IDs in the chain
+    """
+    task_ids = {}
+    current = chain_result
+    
+    # The chain is stored in the result's 'parent' attribute
+    while hasattr(current, 'parent') and current.parent:
+        task_ids[current.id] = {
+            'task_name': current.name,
+            'state': current.state
+        }
+        current = current.parent
+    
+    # Add the last task in the chain
+    if current:
+        task_ids[current.id] = {
+            'task_name': current.name,
+            'state': current.state
+        }
+    
+    return task_ids
 
+def pipeline_qr_detector(celery_app, video_folder, video_path, video_name):
+    
+    log_path = os.path.join(video_folder, 'qr_detector_log.txt')
+    
+    # Genera la lista con rango de frames: frame ranges
+    frame_ranges_task = celery_app.signature(
+        'tasks.tasks.frame_ranges_task',
+        kwargs={
+            'input_folder': video_folder,
+            'output_folder': video_folder,
+            'video_name': video_name,
+            'modo': 'hibrido',
+            'log_file_name': log_path,
+        }, 
+        queue='qr_detector_queue',
+        task_id=f'{video_name}_frame_ranges_task'
+    )
+    
+    # Genera subtareas paralelas para procesar rangos de frames, combina resultados, y genera datos
+    generar_datos_task = celery_app.signature(
+        'tasks.tasks.generar_tareas_fr_task',
+        kwargs={
+            'video_path': video_path,
+            'log_path': os.path.join(video_folder, 'qr_detector_log.txt'),
+            'output_folder': video_folder
+        }, 
+        queue='qr_detector_queue',
+        task_id=f'{video_name}_generar_datos_qr_task'
+    )
+    
+    return chain(
+        frame_ranges_task,
+        generar_datos_task
+    )
+    
+def pipeline_detector_bayas(celery_app, video_folder, video_name):
+        
+    return celery_app.signature(
+        'tasks.detector',
+        kwargs = {
+            'input_folder': video_folder,
+            'output_folder': video_folder,
+            'video_name': video_name
+        },
+        queue='detector_queue',
+        task_id=f'{video_name}_detector_task'
+    )
 
+def pipeline_tracker(celery_app, video_folder, radius, video_name, draw_circles, draw_tracking):
+    
+    return celery_app.signature(
+        'tasks.tracker_http_task',
+        kwargs = {
+            'input_folder': video_folder,
+            'output_folder': video_folder,
+            'video_name': video_name,
+            'radius': radius,
+            'draw_circles': draw_circles,
+            'draw_tracking': draw_tracking
+        },
+        queue='peticiones_queue',
+        task_id=f'{video_name}_tracker_task'
+    )
+    
+def pipeline_nubes(celery_app, 
+                   input_folder, 
+                   output_folder, 
+                   video_name, 
+                   baya_thresh,
+                   qr_thresh,
+                   cant_nubes,
+                   calib_file,
+                   qr_dist,
+                   dists_list,
+                   reproy_csv_name, 
+                   num_points): 
+    
+    return celery_app.signature(
+        'tasks.nubes_http_task',
+        kwargs = {
+            'input_folder': input_folder,
+            'output_folder': output_folder,
+            'video_name': video_name,
+            'baya_thresh': baya_thresh,
+            'qr_thres': qr_thresh,
+            'qr_dist': qr_dist,
+            'cant_nubes': cant_nubes,
+            'calib_file': calib_file,
+            'dists_list': dists_list,
+            'reproy_csv_name': reproy_csv_name,
+            'num_points': num_points
+        },
+        queue='peticiones_queue',
+        task_id=f'{video_name}_nubes_task'
+    )
