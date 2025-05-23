@@ -13,12 +13,7 @@ print("Archivos en el directorio actual:", os.listdir("."))
 
 app = FastAPI()
 
-@app.get("/")
-async def root():
-    return {"message: hola como estamos"}
-
-
-@app.post('/nubes')
+@app.post('/nubes_task')
 async def nubes(request: nubesRequest):
     
     try:    

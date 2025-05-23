@@ -46,5 +46,4 @@ COPY . .
 RUN cd ./Release && chmod +x ./build.sh && ./build.sh
 
 # --- Exponer puerto y comando de inicio ---
-EXPOSE 8001
-CMD ["uvicorn", "api.main:app", "--reload", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["uvicorn", "api.main:app", "--reload", "--host", "0.0.0.0", "--port", "8004"]

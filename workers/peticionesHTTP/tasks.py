@@ -4,6 +4,44 @@ import requests
 app = Celery('peticioneshttp', broker='redis://localhost:6379/0', queue='peticiones_queue')
 
 @app.task
+def detector_http_task(input_folder, output_folder, video_name):
+    
+    payload = {
+        'input_folder': input_folder,
+        'output_folder': output_folder,
+        'video_name': video_name    
+    }
+    
+    response = requests.post(
+        'http://detector-service:8001/detector_task',
+        json=payload
+    )
+    
+    response.raise_for_status()
+    return response.json()
+
+@app.task
+def qr_detector_http_task(_ignore, input_folder, output_folder, video_name, num_processes, generar_video, factor_lentitud):
+    
+    payload = {
+        'input_folder': input_folder,
+        'output_folder': output_folder,
+        'video_name': video_name,
+        'num_processes': num_processes,
+        'generar_video': generar_video,
+        'factor_lentitud': factor_lentitud       
+    }
+    
+    response = requests.post(
+        'http://qrdetector-service:8002/qr_detector_task',
+        json=payload
+    )
+    
+    response.raise_for_status()
+    return response.json()
+    
+
+@app.task
 def tracker_http_task(_ignore, input_folder, output_folder, video_name, radius, draw_circles, draw_tracking):
     """
     Task to track objects in a video using HTTP request.
@@ -18,7 +56,7 @@ def tracker_http_task(_ignore, input_folder, output_folder, video_name, radius, 
     }
     
     response = requests.post(
-        'http://tracker-service:8000/tracker_task',
+        'http://tracker-service:8003/tracker_task',
         json=payload
     )
     
@@ -56,7 +94,7 @@ def nubes_http_task(_ignore,
     }
     
     response = requests.post(
-        'http://nubes-service:8001/nubes',
+        'http://nubes-service:8004/nubes_task',
         json=payload
     )
     

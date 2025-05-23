@@ -2,6 +2,7 @@ FROM aaii/cuda:9.2-cudnn7-devel-ubuntu18.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+
 RUN apt-get update && apt-get install -y \ 
     git \
     wget \
@@ -32,13 +33,16 @@ RUN conda env create -f environment.yml
 
 COPY requirements.txt .
 
-RUN conda run -n CircleNet pip install --default-timeout=1000 -r requirements.txt
+RUN conda run -n CircleNet pip install -r requirements.txt
 
 # Activar el entorno en conda
 SHELL ["conda", "run", "-n", "CircleNet", "/bin/bash", "-c"]
 
 # cudnn.enabled
 RUN sed -i "1254s/torch\.backends\.cudnn\.enabled/False/g" $(python -c "import torch; print(torch.__file__)")/nn/functional.py || true
+
+# Instalar fastapi y sus dependencias
+RUN pip install fastapi==0.83.0 pydantic==1.8.2 uvicorn[standard]
 
 # Copiar y ejecutar el script de instalación de PyTorch 0.4.1
 COPY install_pytorch041.sh /tmp/install_pytorch041.sh
@@ -53,9 +57,6 @@ RUN git clone https://github.com/cocodataset/cocoapi.git /opt/cocoapi && \
 
 RUN conda install -y cffi
 
-RUN conda install -y celery
-RUN pip install redis
-
 # Copiar proyecto
 WORKDIR /app
 COPY . .
@@ -66,5 +67,4 @@ ENV PYTHONPATH=/app/src/lib:/app/src/lib/external:/app/src/lib/models/networks/D
 RUN chmod +x compiler.sh
 RUN chmod +x entrypoint.sh
 
-EXPOSE 8003
 ENTRYPOINT ["./entrypoint.sh"]

@@ -1,4 +1,3 @@
 # Ignore all files in the output and input directories
-./output/*
-./input/*
-*/__pycache__/*
+/output/*
+/input/*

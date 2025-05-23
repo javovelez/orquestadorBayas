@@ -24,5 +24,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia todo en la carpeta del container
 COPY . .
 
-# Ejecución Celery
-CMD ["celery", "-A", "tasks.tasks", "worker", "-Q", "qr_detector_queue", "--loglevel=info"]
+CMD ["uvicorn", "api.main:app", "--reload", "--host", "0.0.0.0", "--port", "8002"]
+
