@@ -1,4 +1,5 @@
 /orquestador/api/__pycache__/*
-/shared_vol/*
+/shared_vol
 /orquestador/videos
-
+/videos_prueba
+*/__pycache__/*

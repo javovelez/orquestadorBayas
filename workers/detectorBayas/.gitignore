@@ -1,6 +1,3 @@
-# Dependency Libraries
-src/lib/models/networks/DCNv2/*
-src/lib/external/
 cocoapi/*
 img/*
 # Cache
