@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from celery import Celery, chain, group, chord
 from celery.result import AsyncResult
 from pipelines import pipeline_detector_bayas, pipeline_qr_detector, pipeline_tracker, pipeline_nubes
@@ -85,6 +85,18 @@ async def upload_videos(videos: List[UploadFile] = File(...)):
         tasks_ids.append(task_id_dict)
         
     return tasks_ids
+
+@app.get("/task_status/{task_id}")
+def task_status(task_id: str):
+    result = AsyncResult(task_id, app=celery_app)
+    if not result:
+        raise HTTPException(status_code=404, detail="Task ID no encontrado")
+    return {
+        "task_id": task_id,
+        "state": result.state,
+        "result": result.result,
+        "info": result.info
+    }
 
 def get_task_ids_from_chain(chain_result: AsyncResult) -> Dict[str, str]:
     """
