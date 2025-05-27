@@ -28,7 +28,7 @@ def create_output_directories(root, directories_list):
 def process_videos(opt, video_name='video'):
 
     cam = cv2.VideoCapture(opt.demo)
-    print('video:', opt.demo)
+    print('video a procesar:', opt.demo)
     opt.detector_for_track.pause = False
     frame_number=0
     flag = True

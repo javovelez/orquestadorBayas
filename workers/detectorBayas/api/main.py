@@ -5,6 +5,7 @@ import os
 import torch
 from src.lib.detectors.circledet_iou import CircledetIOUDetector
 from .utils import process_videos
+import torch
 
 app = FastAPI()
 
@@ -14,6 +15,10 @@ print(torch.__version__)
 @app.post("/detector_task")
 async def detector(request: DetectorRequest):
     
+    print(torch.__version__)
+    print(torch.version.cuda)
+    print(torch.cuda.get_device_name(0))
+
     torch.backends.cudnn.enabled = False
 
     Detector = CircledetIOUDetector
@@ -31,6 +36,8 @@ async def detector(request: DetectorRequest):
     
     opt.detector_for_track = Detector(opt)
     opt.demo = os.path.join(request.input_folder, request.video_name + '.mp4')
+    
+    print(f"Procesando video: {opt.demo}")
     
     process_videos(opt, video_name=request.video_name)
     
