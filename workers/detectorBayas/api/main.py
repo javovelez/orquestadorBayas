@@ -39,6 +39,6 @@ async def detector(request: DetectorRequest):
     
     print(f"Procesando video: {opt.demo}")
     
-    process_videos(opt, video_name=request.video_name)
+    process_videos(opt, video_name=request.video_name, output_folder=request.output_folder)
     
     return {"message": "Detección completada", "video_name": request.video_name, "output_folder": request.output_folder}

@@ -68,6 +68,9 @@ def procesar_frame_range(video_path: str, log_path: str, start_frame: int, end_f
     os.makedirs(f'{output}/qr_frames/', exist_ok=True)
     cap = cv2.VideoCapture(video_path)    
     frame_num = 0
+    # rotation = get_video_rotation(video_path)
+    
+    print(f"Procesando video en qr_detector: {video_path}")
 
     while frame_num < end_frame and cap.isOpened():
 
@@ -82,6 +85,10 @@ def procesar_frame_range(video_path: str, log_path: str, start_frame: int, end_f
                 print(f"Error al leer el frame {frame_num}.")
                 frame_num += 1
                 continue
+                # Aplicar rotación si es necesario
+                
+        # if rotation != 0:
+        #     frame = rotate_frame(frame, rotation)
           
         try:
             # Dividir el frame en parches más pequeños
@@ -192,3 +199,35 @@ def procesar_video_parallel(video_path: str, log_path: str, output_path: str, nu
     # Unir los resultados de todos los procesos
     datos = [item for sublist in results for item in sublist]
     return datos
+
+def get_video_rotation(video_path):
+    """Obtiene la rotación del video usando metadatos (FFmpeg/OpenCV no lo hace automáticamente)."""
+    cap = cv2.VideoCapture(video_path)
+    rotation = 0
+    try:
+        # Para videos MP4/MOV, la rotación puede estar en la metadata
+        if cap.isOpened():
+            # OpenCV no expone directamente la rotación, pero puedes usar FFmpeg o exiftool
+            # Alternativa: Usar CAP_PROP_ORIENTATION (depende de la versión de OpenCV)
+            rotation_code = int(cap.get(cv2.CAP_PROP_ORIENTATION_META))
+            if rotation_code == 90:
+                rotation = 90
+            elif rotation_code == 180:
+                rotation = 180
+            elif rotation_code == 270:
+                rotation = 270
+    except:
+        pass
+    cap.release()
+    return rotation
+
+def rotate_frame(frame, rotation):
+    """Rota el frame según el ángulo especificado."""
+    if rotation == 90:
+        return cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+    elif rotation == 180:
+        return cv2.rotate(frame, cv2.ROTATE_180)
+    elif rotation == 270:
+        return cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    return frame
+

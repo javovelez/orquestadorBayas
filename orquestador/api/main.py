@@ -18,14 +18,14 @@ async def upload_videos(videos: List[UploadFile] = File(...)):
     factor_lentitud = 0.5
     baya_thresh = 0.7*150
     qr_thresh = 120
-    cant_nubes = 1 
-    calib_file = 'MotorolaG200_Javo_Vertical.yaml'
+    cant_nubes = 3 
+    calib_file = 'MotorolaG200_Javo_Horizontal.yaml'
     qr_dist = 2.1
-    dists_list = [10, 40, 5], 
-    reproy_csv_name = 'reproyecciones.csv'
+    dists_list = [10, 21, 5]
     num_points = 100
+    umbral_triangulacion = 0.08
+    max_workers_triangulacion = 4
 
-    # Procesar videos en lotes de 4
     all_task = []
     all_task_ids = [] 
     uploaded_videos = []
@@ -49,10 +49,22 @@ async def upload_videos(videos: List[UploadFile] = File(...)):
         # Crear un grupo de pipelines (cada pipeline es una cadena)
         # CAMBIAR POR PARAMETROS COMO ANTES
         pipeline = chain(
-            detector_http_task.s(video_folder, video_folder, video_name)
-            # qr_detector_http_task.s(video_folder, video_folder, video_name, num_processes, generar_video_qr, factor_lentitud),
-            # tracker_http_task.s(video_folder, video_folder, video_name, radius=10, draw_circles=True, draw_tracking=True),
-            # nubes_http_task.s(video_folder, video_folder, video_name, baya_thresh, qr_thresh, cant_nubes, calib_file, qr_dist, dists_list, reproy_csv_name, num_points)
+            group (detector_http_task.s(video_folder, video_folder, video_name), 
+                   qr_detector_http_task.s(video_folder, video_folder, video_name, num_processes, generar_video_qr, factor_lentitud)
+                   ),
+            tracker_http_task.s(video_folder, video_folder, video_name, radius=10, draw_circles=True, draw_tracking=True),
+            nubes_http_task.s(video_folder, 
+                              video_folder, 
+                              video_name, 
+                              baya_thresh, 
+                              qr_thresh,
+                              cant_nubes, 
+                              calib_file, 
+                              qr_dist, 
+                              dists_list, 
+                              num_points, 
+                              umbral_triangulacion, 
+                              max_workers_triangulacion)
         )
 
         all_task.append(pipeline)

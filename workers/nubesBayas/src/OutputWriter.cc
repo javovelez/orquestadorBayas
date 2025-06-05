@@ -106,8 +106,11 @@ void OutputWriter::graficarReproyecciones(InputReader* mpInputReader, bool grafi
 		map<int, cv::Point2f> reprojections = tuple_frame.second;
 		map<int, cv::Point2f> normal_points;
 		if(graficarNormal) normal_points = normal_points_map[frame_id];
-		//cout<<mpInputReader->GetImageName(frame_id)<<endl;
+
+		cout<<mpInputReader->GetImageName(frame_id)<<endl;
+
 		cv::Mat img = cv::imread(mpInputReader->GetImageName(frame_id));
+
 		map<int, cv::Point2f> kpsInput = mpInputReader->GetPoints(frame_id);
 		map<int, std::string> labels = mpInputReader->getLabels();
 		for (auto const& tuple_point : reprojections){
@@ -137,7 +140,7 @@ void OutputWriter::graficarReproyecciones(InputReader* mpInputReader, bool grafi
 			}
 		}
 		const string ruta = strOutputPath+"/"+to_string(frame_id)+".png";
-		//cout<<ruta<<endl;
+		cout<<ruta<<endl;
 		cv::imwrite(ruta,img);
 	}
 

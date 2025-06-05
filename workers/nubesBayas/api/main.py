@@ -24,15 +24,17 @@ async def nubes(request: nubesRequest):
         qr_threshold = request.qr_threshold
         qr_dist = request.qr_dist
         dists_list = request.dists_list
-        reproy_csv_name = request.reproy_csv_name
         cantidad_nubes = request.cantidad_nubes
-        calib_path = os.path.join(request.input_path, 'calib', request.calib_file)
+        calib_path = os.path.join('/app/calib', request.calib_file)
         bundles_path = os.path.join(output_folder, 'bundles.csv')
-        frames_path = os.path.join(output_folder, 'frames')      
+        umbral_triangulacion = request.umbral_triangulacion
+        max_workers_triangulacion = request.max_workers_triangulacion
+        
+        print(calib_path)
         
         # Generamos bundles.csv
-        tracker_detection_path = os.path.join(input_folder, video_name+'_tracker_detections.csv')
-        qr_detection_path = os.path.join(input_folder, video_name+'_qr_detections.csv')
+        tracker_detection_path = os.path.join(input_folder, 'tracker_detections.csv')
+        qr_detection_path = os.path.join(input_folder, 'qr_detections.csv')
         
         path_list = [tracker_detection_path, qr_detection_path]
 
@@ -54,12 +56,13 @@ async def nubes(request: nubesRequest):
         # RECONSTRUCCIÓN DE BAYAS    
         # Elegimos cuál es la mejor reconstrucción: min_mer, min_dist y min_path están preestablecidos, pero se pueden cambiar
         path_minimo, mer_minimo, dist_minimo = get_best_triangulacion(output_path=output_folder, 
-                                                                        dists_list=dists_list, 
-                                                                        input_csv_name=reproy_csv_name,
+                                                                        dists_list=dists_list,
                                                                         calib_path=calib_path,
                                                                         bundles_path=bundles_path,
-                                                                        frames_path=frames_path,
-                                                                        qr_dist=qr_dist
+                                                                        frames_path=output_frames,
+                                                                        qr_dist=qr_dist,
+                                                                        umbral_triangulacion=umbral_triangulacion,
+                                                                        max_workers=max_workers_triangulacion
                                                                     )
         
         print("El mejor path es:", path_minimo)
@@ -92,23 +95,3 @@ async def nubes(request: nubesRequest):
         }
         
         raise HTTPException(status_code=400, detail=detalles)
-
-@app.get('/minim-path')
-async def ratio_minimo(request: nubesRequest): 
-    
-    folder_path = os.path.join(request.output_path, request.video_name)
-    
-    path_minimo, mer_minimo, dist_minimo = get_best_triangulacion2(
-        output_path=folder_path,
-        dists_list=request.dists_list,
-        min_mer=request.min_mer,
-        min_dist=request.min_dist,
-        min_path=request.min_path,
-        input_csv_name=request.reproy_csv_name
-    )
-    
-    return {
-                "path_minimo": path_minimo,
-                "mer_minimo": mer_minimo,
-                "dist_minimo": dist_minimo,
-            }

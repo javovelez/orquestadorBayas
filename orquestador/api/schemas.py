@@ -9,6 +9,5 @@ class UserRequest(BaseModel):
     cant_nubes = 1 
     calib_file = 'MotorolaG200_Javo_Vertical.yaml'
     qr_dist = 2.1
-    dists_list = [10, 40, 5], 
-    reproy_csv_name = 'reproyecciones.csv'
+    dists_list = [10, 40, 5],
     num_points = 100

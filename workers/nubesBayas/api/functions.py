@@ -11,6 +11,8 @@ import glob
 
 # Pasar video.mp4 a frames
 def video_to_frame(video_path, output_folder, video_name="VID_UNKNOWN"):
+    
+    # rotation = get_video_rotation(video_path)
 
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -22,8 +24,6 @@ def video_to_frame(video_path, output_folder, video_name="VID_UNKNOWN"):
         print(video_path)
 
     frame_count = 0
-    # Temporal
-    racimo_id = "001"
 
     print(f"Extrayendo frames de {video_path} y guardando en {output_folder}...")
 
@@ -35,10 +35,11 @@ def video_to_frame(video_path, output_folder, video_name="VID_UNKNOWN"):
         if not ret:
             break
         
-        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+        # if rotation != 0:
+        #     frame = rotate_frame(frame, rotation)
 
         # Guardar el frame como imagen
-        frame_filename = os.path.join(output_folder, f"{racimo_id}_{video_name}_{frame_count}.png")
+        frame_filename = os.path.join(output_folder, f"{video_name}_{frame_count}.png")
         cv2.imwrite(frame_filename, frame)
 
         frame_count += 1
@@ -89,7 +90,7 @@ def read_and_process_csv(csv_file_path):
     return media_error_ratio
 
 # Generar triangulación
-def triangulacion(calib_path, bundles_path, frames_path, output_path, qr_dist, dist, input_csv_name):
+def triangulacion(calib_path, bundles_path, frames_path, output_path, qr_dist, dist):
     try: 
         
         print(f"[{dist}] Iniciando triangulación... \n") 
@@ -112,13 +113,13 @@ def triangulacion(calib_path, bundles_path, frames_path, output_path, qr_dist, d
             text=True
         )
         
-        repro_path = glob.glob(f"{output_path}/{dist}_*/{input_csv_name}")
+        repro_path = glob.glob(f"{output_path}/{dist}_*/Reproyecciones.csv")
             
         if repro_path:
             # print(f"Ruta encontrada: {repro_path[0]}")
             repro_path = repro_path[0]
         else:
-            print(f"No se encontró el archivo reproyeccion.csv en una carpeta que empiece con '{dist}_'")
+            print(f"No se encontró el archivo Reproyecciones.csv en una carpeta que empiece con '{dist}_'")
             return None
                 
         media_error_ratio = read_and_process_csv(repro_path)
@@ -134,10 +135,24 @@ def triangulacion(calib_path, bundles_path, frames_path, output_path, qr_dist, d
         return None
     
 # Generar y obtener la mejor triangulación
-def get_best_triangulacion(output_path:str, dists_list:list, min_mer:int=10, min_dist:int=0, min_path:str='', input_csv_name:str='Reproyecciones.csv', calib_path='', bundles_path='', frames_path='', qr_dist:float=2.1, max_workers:int = 6):
+def get_best_triangulacion(output_path:str, 
+                           dists_list:list, 
+                           min_mer:int=10, 
+                           min_dist:int=0, 
+                           min_path:str='', 
+                           calib_path='', 
+                           bundles_path='', 
+                           frames_path='', 
+                           qr_dist:float=2.1, 
+                           umbral_triangulacion: float = 0.08, 
+                           max_workers: int=1):
     mer_minimo = min_mer
     dist_minimo = min_dist
     path_minimo = min_path
+     
+    # Aplanar si es una lista anidada por error
+    if isinstance(dists_list, list) and len(dists_list) == 1 and isinstance(dists_list[0], list):
+       dists_list = dists_list[0]
      
     dists = [str(i) for i in range(dists_list[0], dists_list[1], dists_list[2])]
     results = []
@@ -146,7 +161,7 @@ def get_best_triangulacion(output_path:str, dists_list:list, min_mer:int=10, min
         
         # Ejecuto la triangulación en paralelo
         futures = {
-            executor.submit(triangulacion, calib_path, bundles_path, frames_path, output_path, qr_dist, dist, input_csv_name): dist for dist in dists
+            executor.submit(triangulacion, calib_path, bundles_path, frames_path, output_path, qr_dist, dist): dist for dist in dists
         }
         
         best = None
@@ -164,7 +179,7 @@ def get_best_triangulacion(output_path:str, dists_list:list, min_mer:int=10, min
                     path_minimo = result['repro_path']
                     print(f"Mejor reconstrucción hasta ahora: {mer_minimo} con distancia {dist_minimo}")
 
-                if mer_minimo < 0.08:
+                if mer_minimo < umbral_triangulacion:
                     print(f"Esta reconstrucción es lo suficientemente buena porque su mer es de {result['media_error_ratio']}")
                     break
                 
@@ -264,3 +279,35 @@ def get_best_triangulacion2(output_path:str, dists_list:list, min_mer:int=10, mi
             path_minimo = repro_path
                     
     return path_minimo, mer_minimo, dist_minimo
+
+def get_video_rotation(video_path):
+    """Obtiene la rotación del video usando metadatos (FFmpeg/OpenCV no lo hace automáticamente)."""
+    cap = cv2.VideoCapture(video_path)
+    rotation = 0
+    try:
+        # Para videos MP4/MOV, la rotación puede estar en la metadata
+        if cap.isOpened():
+            # OpenCV no expone directamente la rotación, pero puedes usar FFmpeg o exiftool
+            # Alternativa: Usar CAP_PROP_ORIENTATION (depende de la versión de OpenCV)
+            rotation_code = int(cap.get(cv2.CAP_PROP_ORIENTATION_META))
+            if rotation_code == 90:
+                rotation = 90
+            elif rotation_code == 180:
+                rotation = 180
+            elif rotation_code == 270:
+                rotation = 270
+    except:
+        pass
+    cap.release()
+    return rotation
+
+def rotate_frame(frame, rotation):
+    """Rota el frame según el ángulo especificado."""
+    if rotation == 90:
+        return cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+    elif rotation == 180:
+        return cv2.rotate(frame, cv2.ROTATE_180)
+    elif rotation == 270:
+        return cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    return frame
+

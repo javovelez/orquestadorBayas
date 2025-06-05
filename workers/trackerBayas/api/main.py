@@ -49,7 +49,7 @@ async def tracker(request: TrackerRequest):
     args.output = output_path
     args.radius = radius
     if video_name is not None:
-        args.video_path = os.path.join(input_path, video_name)
+        args.video_path = video_file
         args.draw_tracking = draw_tracking
         args.draw_circles = draw_circles
 

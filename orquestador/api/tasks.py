@@ -21,7 +21,6 @@ def detector_http_task(input_folder: str, output_folder: str, video_name: str) -
 
 @celery_app.task
 def qr_detector_http_task(
-    _ignore: Any,
     input_folder: str,
     output_folder: str,
     video_name: str,
@@ -81,14 +80,15 @@ def nubes_http_task(
     input_folder: str, 
     output_folder: str, 
     video_name: str, 
-    baya_thresh: float = 0.7*150, 
-    qr_thresh: float = 120, 
-    cant_nubes: int = 1, 
-    calib_file: str = 'MotorolaG200_Javo_Vertical.yaml', 
-    qr_dist: float = 2.1, 
-    dists_list: list = [10, 40, 5], 
-    reproy_csv_name: str = 'reproyecciones.csv',
-    num_points: int = 100
+    baya_thresh: float, 
+    qr_thresh: float, 
+    cant_nubes: int, 
+    calib_file: str, 
+    qr_dist: float, 
+    dists_list: list, 
+    num_points: int,
+    umbral_triangulacion: float,
+    max_workers_triangulacion: int
 ) -> Dict[str, Any]:
     """Tarea asíncrona para el procesamiento de nubes usando HTTPX"""
     payload = {
@@ -97,12 +97,13 @@ def nubes_http_task(
         'video_name': video_name,
         'baya_threshold': baya_thresh,
         'qr_threshold': qr_thresh,
-        'qr_dist': qr_dist,
         'cantidad_nubes': cant_nubes,
         'calib_file': calib_file,
+        'qr_dist': qr_dist,
         'dists_list': dists_list,
-        'reproy_csv_name': reproy_csv_name,
-        'num_points': num_points
+        'num_points': num_points,
+        'umbral_triangulacion': umbral_triangulacion,
+        'max_workers_triangulacion': max_workers_triangulacion
     }
     
     with httpx.Client(timeout=None) as client:
