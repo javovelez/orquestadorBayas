@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from external.nms import soft_nms
 from models.decode import cdiou_decode
 from models.utils import flip_tensor
-from src.lib.utils.post_process import cdiou_post_process
+from utils.post_process import cdiou_post_process
 
 from .base_detector import BaseDetector
 

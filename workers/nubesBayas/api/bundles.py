@@ -169,22 +169,3 @@ def write_in_folder(df: pd.DataFrame, folder: str) -> None:
     os.makedirs(folder, exist_ok=True)
     file_path = os.path.join(folder, "bundles.csv")
     df.to_csv(file_path, index=False, na_rep="NULL")
-
-
-# Ejemplo de uso
-if __name__ == "__main__":
-    file_paths = ["001_VID_20230322_173621_qr_detections.csv", "001_VID_20230322_173621detections.csv"]
-    
-    df = read_bind_rows(file_paths=file_paths)
-    df = procesar_datos(df, 'baya')
-    
-    print("Datos procesados label count")
-    print(df['label'].value_counts())
-    
-    df = generate_image_table(df, 0.7*150, 120)
-    
-    print('\n')
-    print("Generate image table label count")
-    print(df['label'].value_counts())
-    
-    write_in_folder(df, folder='./output')

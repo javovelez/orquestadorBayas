@@ -330,6 +330,7 @@ int InputReader::GetInitDist() {
 
 string InputReader::GetImageName(int frameId) {
 	string full_path = imagesPath + "/" + img_names[frameId];
+	cout<<full_path<<endl;
 	return full_path;
 }
 

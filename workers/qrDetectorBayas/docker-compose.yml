@@ -3,8 +3,11 @@ services:
     image: qrdetector
     build: .
     container_name: QRDetector
+    ports:
+      - "8000:8000"
     volumes:
       - ./:/app
+      - shared_vol:/app/data
 
 volumes:
   shared_vol:

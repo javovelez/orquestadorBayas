@@ -42,9 +42,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # --- Copiar el resto del código fuente ---
 COPY . .
 
-# --- Compilación del script C++ ---
-RUN cd ./Release && chmod +x ./build.sh && ./build.sh
+# Copiar el entrypoint
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+EXPOSE 8004
 
 # --- Exponer puerto y comando de inicio ---
-EXPOSE 8001
-CMD ["uvicorn", "api.main:app", "--reload", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["/app/entrypoint.sh"]

@@ -9,7 +9,7 @@ services:
       - NVIDIA_DISABLE_REQUIRE=1
       - LD_LIBRARY_PATH=/usr/local/cuda-9.2/lib64:${LD_LIBRARY_PATH}
     build: .
-    container_name: detector_bayas
+    container_name: detector
     ports:
       - "8003:8000"
     volumes:
