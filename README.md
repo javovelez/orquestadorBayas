@@ -1,6 +1,7 @@
 # Sistema de Código Abierto para la generación de modelos 3D de racimos de uvas a partir de un video MP4
 ## Descripción y funcionamiento
 Este es un Sistema innovador basado en Arquitectura de Microservicios para la generación automatizada de nubes densas de puntos 3D a partir de un video MP4. Su funcionamiento consiste en enviar una lista de videos con las siguientes características. 
+
 ![VID_20230321_142835 (1)](https://github.com/user-attachments/assets/8bf1e53b-22c9-4cb4-8b75-a0464ce96335)
 
 Con los siguientes parámetros para su procesamiento 
@@ -49,7 +50,33 @@ Antes de hacer la petición es necesario levantar el sistema de contenedores, es
 docker-compose down && docker-compose up --build
 ```
 Una vez terminado el procesamiento, los resultados son parecidos a los siguientes (depende del video MP4)
+
 ![image](https://github.com/user-attachments/assets/4a8412bc-6f11-4033-af98-a03c9037a45d)
+
+## Requisitos para su funcionamiento
+
+Este sistema funciona con CUDA, únicamente para los modelos NVIDIA 10XX por las versiones de Pytorch y CUDA que utiliza el Detector de Bayas.
+
+Es fundamental descargar los pesos del Detector de Bayas en el siguiente link: https://drive.google.com/file/d/1XsvtpexSGl8kwA1xgeCUBpyOIuSvXy8V/view?usp=drive_link. Se debe poner este archivo en la carpeta `workers/detectorBayas`. Es recomendable utilizar el siguiente comando en consola 
+
+```
+gdown https://drive.google.com/file/d/1XsvtpexSGl8kwA1xgeCUBpyOIuSvXy8V/view?usp=drive_link
+```
+
+Además, se debe dar permisos de ejecución a los scripts .sh 
+
+```
+cd workers/detectorBayas
+chmod +x entrypoint.sh install_pytorch041.sh compiler.sh
+```
+
+```
+cd workers/nubesBayas
+chmod +x entrypoint.sh
+```
+
+El sistema debe tener instalado `nvidia-smi` y NVIDIA Container Toolkit para que los contenedores Docker puedan utilizar la GPU del host: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
+
 
 
 
