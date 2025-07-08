@@ -53,7 +53,7 @@ Una vez terminado el procesamiento, los resultados son parecidos a los siguiente
 
 ![image](https://github.com/user-attachments/assets/4a8412bc-6f11-4033-af98-a03c9037a45d)
 
-## Requisitos para su funcionamiento
+## Hacer antes de utilizar
 
 Este sistema funciona con CUDA, únicamente para los modelos NVIDIA 10XX por las versiones de Pytorch y CUDA que utiliza el Detector de Bayas.
 
