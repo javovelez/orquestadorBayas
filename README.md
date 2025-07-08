@@ -2,6 +2,7 @@
 ## Descripción y funcionamiento
 Este es un Sistema innovador basado en Arquitectura de Microservicios para la generación automatizada de nubes densas de puntos 3D a partir de un video MP4. Su funcionamiento consiste en enviar una lista de videos con las siguientes características. 
 ![VID_20230321_142835 (1)](https://github.com/user-attachments/assets/8bf1e53b-22c9-4cb4-8b75-a0464ce96335)
+
 Con los siguientes parámetros para su procesamiento 
 ```
     num_processes: int
@@ -49,4 +50,6 @@ docker-compose down && docker-compose up --build
 ```
 Una vez terminado el procesamiento, los resultados son parecidos a los siguientes (depende del video MP4)
 ![image](https://github.com/user-attachments/assets/4a8412bc-6f11-4033-af98-a03c9037a45d)
+
+
 
