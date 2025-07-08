@@ -1,6 +1,8 @@
 # Sistema de Código Abierto para la generación de modelos 3D de racimos de uvas a partir de un video MP4
 ## Descripción y funcionamiento
-Este es un Sistema innovador basado en Arquitectura de Microservicios para la generación automatizada de nubes densas de puntos 3D a partir de un video MP4. Su funcionamiento consiste en enviar una lista de videos con las siguientes características. 
+Este es un Sistema innovador basado en Arquitectura de Microservicios para la generación automatizada de nubes densas de puntos 3D a partir de un video MP4. El video es procesado por una Red Neuronal Convolucional para detectar cada una de las uvas del racimo, posteriormente se realiza un Seguimiento de Objetos Múltiples (MOT) para reconstruir tridimensionalmente mediante Structure from Motrion (SfM). 
+
+Su funcionamiento consiste en enviar una lista de videos con las siguientes características. 
 
 ![VID_20230321_142835 (1)](https://github.com/user-attachments/assets/8bf1e53b-22c9-4cb4-8b75-a0464ce96335)
 
@@ -77,6 +79,12 @@ chmod +x entrypoint.sh
 
 El sistema debe tener instalado `nvidia-smi` y NVIDIA Container Toolkit para que los contenedores Docker puedan utilizar la GPU del host: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
 
-
+## Otras salidas de utilidad que brinda el sistema
+Las otras salidas que el sistema brinda para mejorar la precisión del mismo son
+* Detección de códigos QR frame a frame
+* Detección de bayas frame a frame
+* Triangulación de bayas frame a frame (por cada triangulación realizada) 
+* Video generado con detección de códigos QR a lo largo del video
+* Gráfico de distribución de detección de códigos QR y gráfico temporal de detección de códigos QR
 
 
