@@ -1,101 +1,16 @@
-version: '3.8'
-
-services: 
-  redis: 
-    image: redis:alpine  # Versión más ligera
-    container_name: redis
-    ports: ["6379:6379"]
-    volumes: [redis_data:/data]
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 30s
-      retries: 3
-
-  flower:
-    image: mher/flower
-    container_name: flower
-    environment:
-      - FLOWER_UNAUTHENTICATED_API=true
-      - FLOWER_BROKER_URL=redis://redis:6379/0
-    command: celery --broker=redis://redis:6379/0 flower --port=5555
-    ports: ["5555:5555"]
-    depends_on:
-      redis:
-        condition: service_healthy
-
-  orquestador-fastapi:
-    build: ./orquestador
-    volumes:
-      - ${SHARED_VOL}:/shared
-      - ./orquestador:/app
-    ports: ["8000:8000"]
-    environment:
-      - REDIS_URL=redis://redis:6379/0
-    depends_on:
-      redis:
-        condition: service_healthy
-      detector-service:
-        condition: service_started
-      qrdetector-service:
-        condition: service_started
-      tracker-service:
-        condition: service_started
-      nubes-service:
-        condition: service_started
-    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 4
-
-  orquestador-celery:
-    build: ./orquestador
-    environment:
-      - REDIS_URL=redis://redis:6379/0
-    depends_on:
-      redis:
-        condition: service_healthy
-    command: celery -A api.celery_app worker --loglevel=info --concurrency=4 --hostname=orquestador@%h
-
-  detector-service:
-    build: ./workers/detectorBayas
-    volumes:
-      - ${SHARED_VOL}:/shared
-      - ./workers/detectorBayas:/app
+services:
+  detector: 
+    image: detector
+    user: root
     runtime: nvidia
     environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
       - NVIDIA_VISIBLE_DEVICES=all
-    ports: ["8001:8001"]
-    restart: unless-stopped
-
-  qrdetector-service: 
-    build: ./workers/qrDetectorBayas
-    volumes: 
-      - ./workers/qrDetectorBayas:/app
-      - ${SHARED_VOL}:/shared
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-    ports: ["8002:8002"]
-    restart: unless-stopped
-
-  tracker-service:
-    build: ./workers/trackerBayas
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
+      - NVIDIA_DISABLE_REQUIRE=1
+      - LD_LIBRARY_PATH=/usr/local/cuda-9.2/lib64:${LD_LIBRARY_PATH}
+    build: .
+    container_name: detector
+    ports:
+      - "8003:8000"
     volumes:
-      - ./workers/trackerBayas:/app
-      - ${SHARED_VOL}:/shared
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-    ports: ["8003:8003"]
-    restart: unless-stopped
-
-  nubes-service: 
-    build: ./workers/nubesBayas
-    volumes:
-      - ./workers/nubesBayas:/app
-      - ${SHARED_VOL}:/shared
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-    ports: ["8004:8004"]
-    restart: unless-stopped
-
-volumes:
-  redis_data: 
-  shared_vol:  # Nombre consistente
+      - .:/app

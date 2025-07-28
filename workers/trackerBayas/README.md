@@ -1,2 +1,0 @@
-# trackerBayas
-Tracker de bayas

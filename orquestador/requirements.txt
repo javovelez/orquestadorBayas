@@ -1,8 +1,0 @@
-fastapi
-uvicorn[standard]
-python-multipart
-celery
-redis
-httpx
-pydantic
-shutils

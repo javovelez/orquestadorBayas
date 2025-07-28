@@ -1,9 +1,0 @@
-services:
-  triangulacion: 
-    image: triangulacion
-    build: .
-    container_name: triangulacion
-    ports:
-      - "8001:8000"
-    volumes:
-      - ./:/app
