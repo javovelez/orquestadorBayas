@@ -43,7 +43,7 @@ def process_images(opt, image_list, output_folder):
       ret = opt.detector_for_track.run_det_for_byte(img)[1]
       ret = ret.astype(np.float)
       ret = filter(lambda x: x[0]>0 and x[1]>0, ret)
-      dets[image_number] = { k:list(r[:4]) for k,r in enumerate(ret)}
+      dets[image_name] = { k:list(r[:4]) for k,r in enumerate(ret)}
       image_number += 1
       print(f'processing image {image_name}')
 
