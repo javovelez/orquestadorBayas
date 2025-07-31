@@ -119,7 +119,7 @@ if __name__ == "__main__":
     
     opt.detector_for_track = Detector(opt)
     
-    image_list = encontrar_imagenes_png('./images')
+    image_list = encontrar_imagenes_png('../images')
     
     process_images(opt, image_list, './output')
     
