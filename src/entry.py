@@ -45,7 +45,7 @@ def process_images(opt, image_list, output_folder):
       image_number += 1
       print(f'processing image {image_name}')
 
-    json.dump(dets, open(os.path.join(opt.output_folder_json, video_name + '.json'), 'w'))
+    json.dump(dets, open(os.path.join(opt.output_folder_json, image_name + '.json'), 'w'))
 
 
 
