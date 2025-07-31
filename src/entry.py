@@ -77,11 +77,7 @@ def rotate_frame(frame, rotation):
         return cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
     return frame
 
-Claro, aquí tienes un código en Python que hace exactamente eso.
 
-Python
-
-import os
 
 def encontrar_imagenes_png(directorio):
   """
