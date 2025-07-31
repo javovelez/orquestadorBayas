@@ -30,23 +30,20 @@ def process_images(opt, image_list, output_folder):
     print(f"Procesando video: {opt.demo}")
     
     for img_path in image_list:
-        
-        
-        img = cv2.imread(img_path)
-        image_name = obtener_nombre_sin_extension(img_path)
-        
-        
-        os.makedirs(os.path.join(output_folder, 'detector_frames'), exist_ok=True)
-        frame_filename = os.path.join(output_folder, 'detector_frames', image_name,'.jpg')
-        cv2.imwrite(frame_filename, img)
-        
-        # cv2.imshow('input', img)
-        ret = opt.detector_for_track.run_det_for_byte(img)[1]
-        ret = ret.astype(np.float)
-        ret = filter(lambda x: x[0]>0 and x[1]>0, ret)
-        dets[image_number] = { k:list(r[:4]) for k,r in enumerate(ret)}
-        image_number += 1
-        print(f'processing image {image_name}')
+      img = cv2.imread(img_path)
+      image_name = obtener_nombre_sin_extension(img_path)
+      
+      os.makedirs(os.path.join(output_folder, 'detector_frames'), exist_ok=True)
+      frame_filename = os.path.join(output_folder, 'detector_frames', image_name,'.jpg')
+      cv2.imwrite(frame_filename, img)
+      
+      # cv2.imshow('input', img)
+      ret = opt.detector_for_track.run_det_for_byte(img)[1]
+      ret = ret.astype(np.float)
+      ret = filter(lambda x: x[0]>0 and x[1]>0, ret)
+      dets[image_number] = { k:list(r[:4]) for k,r in enumerate(ret)}
+      image_number += 1
+      print(f'processing image {image_name}')
 
     json.dump(dets, open(os.path.join(opt.output_folder_json, video_name + '.json'), 'w'))
 
@@ -128,6 +125,6 @@ if __name__ == "__main__":
     
     image_list = encontrar_imagenes_png('./images')
     
-    process_videos(opt, image_list, './output')
+    process_images(opt, image_list, './output')
     
     print("Detección completada") 
