@@ -1,0 +1,34 @@
+clonamos el repo 
+
+luego damos permisos
+chmod +x ./entrypoint.sh
+chmod +x ./compiler.sh
+
+tenemos que colocar el modelo en la carpeta scc (la copie del usuario de franco)
+https://drive.google.com/file/d/1XsvtpexSGl8kwA1xgeCUBpyOIuSvXy8V/view
+
+primero limpiar el historial de docker del contenedor "detector":
+
+sudo docker-compose down
+sudo docker rm -f detector
+
+luego hacer build y compose:
+sudo docker-compose up -d --build
+
+luego ver el nro de contenedor:
+docker ps
+
+Luego ingresar al contenedor a para ejecutar el script
+
+docker exec -it XXXXXXXXXXXX   /bin/sh
+
+dentro del contenedor:
+cd src
+conda run -n CircleNet python entry.py
+
+Vamos a ver los resultados en src/output
+
+podemos modificar el código en la carpeta detector, ya que el contenedor la ve como un volumen.
+esto facilita trabajar modificando código en local y haciendo push en local y luego pull en el servidor.
+
+
