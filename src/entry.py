@@ -36,7 +36,7 @@ def process_images(opt, image_list, output_folder):
       image_name = obtener_nombre_sin_extension(img_path)
       
       os.makedirs(os.path.join(output_folder, 'detector_frames'), exist_ok=True)
-      frame_filename = os.path.join(output_folder, 'detector_frames', ,f'{image_name}.jpg')
+      frame_filename = os.path.join(output_folder, 'detector_frames', f'{image_name}.jpg')
       cv2.imwrite(frame_filename, img)
       
       # cv2.imshow('input', img)
@@ -47,7 +47,7 @@ def process_images(opt, image_list, output_folder):
       image_number += 1
       print(f'processing image {image_name}')
 
-    json.dump(dets, open(os.path.join(opt.output_folder_json, image_name + '.json'), 'w'))
+    json.dump(dets, open(os.path.join(opt.output_folder_json, '_test' + '.json'), 'w'))
 
 
 
