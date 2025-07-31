@@ -4,6 +4,7 @@ import torch
 from lib.detectors.circledet_iou import CircledetIOUDetector
 import subprocess
 import json
+import cv2
 
 
 def obtener_nombre_sin_extension(ruta_imagen):
