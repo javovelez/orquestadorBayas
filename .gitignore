@@ -1,14 +1,5 @@
-# Dependency Libraries
-src/lib/models/networks/DCNv2/*
-src/lib/external/
-cocoapi/*
-img/*
-# Cache
-__pycache__/
-.idea/*
-
-# Models / Data / Experiments
-*.pth
-models/*
-data/*
-exp/*
+/orquestador/api/__pycache__/*
+/shared_vol
+/orquestador/videos
+/videos_prueba
+*/__pycache__/*
