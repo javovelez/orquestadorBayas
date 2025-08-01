@@ -32,3 +32,5 @@ podemos modificar el código en la carpeta detector, ya que el contenedor la ve 
 esto facilita trabajar modificando código en local y haciendo push en local y luego pull en el servidor.
 
 
+luego podemos apagar el contenedor con sudo docker-compose down
+no debería reiniciar ya que en el docker-compose.yml no hay campo restart
